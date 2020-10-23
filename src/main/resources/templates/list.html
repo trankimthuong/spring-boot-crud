@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Cities Management</title>
+</head>
+<body>
+<h1>List Cities</h1>
+<br>
+<h2>Create new city</h2>
+<form>
+    <table border="1px" cellpadding="5px">
+        <tr>
+            <td>Name</td>
+            <td>
+                <input type="text" id="name">
+            </td>
+        </tr>
+        <tr>
+            <td>Country</td>
+            <td>
+                <input type="text" id="country">
+            </td>
+        </tr>
+        <tr>
+            <td colspan="2">
+                <input type="submit" value="Create" onclick="addNewCity()">
+            </td>
+        </tr>
+    </table>
+    <br>
+    <form >
+        <h3>Search</h3>
+        <input type="text" id="nameSearch" placeholder="input name" onkeyup="searchCity()" >
+        <input type="submit"  value="show all" >
+    </form>
+    <br>
+    <h2>List City</h2>
+    <table border="1px">
+        <tr>
+            <td>Id</td>
+            <td>Name</td>
+            <td>Country</td>
+        </tr>
+        <tr>
+            <tbody id="list">
+
+            </tbody>
+        </tr>
+    </table>
+</form>
+</body>
+<script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+<script type="text/javascript">
+    function addNewCity(){
+        let nameCity = $('#name').val();
+        let country = $('#country').val();
+        let newCity = {
+            name: nameCity,
+            country: country
+        }
+        $.ajax({
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            },
+            url:"cities/create",
+            type: "POST",
+            data: JSON.stringify(newCity),
+            success: function (){
+                showList("cities/findAll")
+            }
+        })
+        event.preventDefault();
+    }
+    function showList(url){
+        $.ajax({
+            type: "GET",
+            url: url,
+            success: function (listCity){
+                let content = "";
+                for (let i = 0; i < listCity.length; i++) {
+                    content +=`<tr id="i"+${i}>
+                <td>${listCity[i].id}</td>
+                <td>${listCity[i].name}</td>
+                <td>${listCity[i].country}</td>
+                <td><a class="deleteClass" href="javascript:;" onclick="remove(${listCity[i].id},event)">Delete</a></td>
+                <td><a class="editClass" th:href="/cities/edit/${listCity[i].id}">Edit</a></td>
+            </tr>`
+                }
+                $('#list').html(content);
+            }
+        })
+    }
+    function remove(id,event){
+        $.ajax({
+            url: "cities/delete/"+ id,
+            type: "DELETE",
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            },
+            success: function (response) {
+                var rowToDelete = $(event.target).closest("tr");
+                rowToDelete.remove();
+            }
+        });
+    }
+    function searchCity(){
+        let name = $("#nameSearch").val();
+        $.ajax({
+            url: "cities/search/"+name,
+            type: "GET",
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            },
+            success: function () {
+                showList("cities/search/"+name);
+            }
+        })
+        event.preventDefault();
+    }
+    showList("cities/findAll");
+</script>
+</html>
